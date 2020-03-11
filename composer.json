@@ -40,7 +40,10 @@
         "sort-packages": true
     },
     "autoload": {
-        "psr-4": { "Symfony\\Bundle\\MakerBundle\\": "src/" }
+        "psr-4": {
+            "Symfony\\Bundle\\MakerBundle\\": "src/",
+            "SymfonyCasts\\Bundle\\ResetPassword\\": "reset-password-bundle/"
+        }
     },
     "autoload-dev": {
         "psr-4": { "Symfony\\Bundle\\MakerBundle\\Tests\\": "tests/" }
