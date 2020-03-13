@@ -5,16 +5,37 @@ jobs:
     name: MakerBundle
     runs-on: ubuntu-latest
     strategy:
-      fail-fast: false
+      fail-fast: true
       matrix:
         php-versions: ['7.2']
     env:
       PHPUNIT_FLAGS: '-v'
       SYMFONY_PHPUNIT_DIR: $GITHUB_WORKSPACE/symfony-bridge/.phpunit
       SYMFONY_REQUIRE: '>=3.4'
+    services:
+      mysql:
+        image: mysql:5.7
+        env:
+          MYSQL_ALLOW_EMPTY_PASSWORD: false
+          MYSQL_ROOT_PASSWORD: password
+        ports:
+          - 3306
+        options: --health-cmd="mysqladmin ping" --health-interval=5s --health-timeout=2s --health-retries=3
     steps:
+      env:
+        DATABASE_URL: mysql://root:password@127.0.0.1:${{ job.services.mysql.ports['3306'] }}/maker_bundle_ci
       - name: Checkout
         uses: actions/checkout@v2.0.0
+
+      - name: Ping MySQL
+        run: |
+          while ! mysqladmin ping -h"127.0.0.1" -P"3306" --silent; do
+            sleep 1
+          done
+
+      - name: Test MySQL
+        run: |
+          mysql -h"127.0.0.1" -P${{ job.services.mysql.ports['3306'] }} -uroot -ppassword -e "SHOW DATABASES"
 
 #      - name: Remove xdebug.ini
 #        run: find ~/.phpenv -name xdebug.ini -delete
@@ -36,3 +57,4 @@ jobs:
 
       - name: CS Fixer
         run: vendor/bin/php-cs-fixer fix --dry-run --diff
+        if: always()
