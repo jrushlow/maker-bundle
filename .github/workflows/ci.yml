@@ -1,0 +1,31 @@
+name: Maker-Bundle CI
+on: [push, pull_request]
+jobs:
+  build:
+    name: MakerBundle
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        php-versions: ['7.2']
+      steps:
+        - name: Checkout
+          uses: actions/checkout@v2.0.0
+
+        - name: Remove xdebug.ini
+          run: find ~/.phpenv -name xdebug.ini -delete
+
+        - name: Composer global
+          run: composer global require --no-progress --no-scripts --no-plugins symfony/flex dev-master
+
+        - name: Composer update
+          run: composer update
+
+        - name: Get phpunit
+          run: vendor/bin/simple-phpunit install
+
+        - name: Validate Composer
+          run: composer validate --strict --no-check-lock
+
+        - name: CS Fixer
+          run: vendor/bin/php-cs-fixer fix --dry-run --diff
