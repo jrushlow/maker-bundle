@@ -8,6 +8,10 @@ jobs:
       fail-fast: false
       matrix:
         php-versions: ['7.2']
+    env:
+      PHPUNIT_FLAGS: -v
+      SYMFONY_PHPUNIT_DIR: $GITHUB_WORKSPACE/symfony-bridge/.phpunit
+      SYMFONY_REQUIRE: >=3.4
     steps:
       - name: Checkout
         uses: actions/checkout@v2.0.0
@@ -26,6 +30,9 @@ jobs:
 
       - name: Validate Composer
         run: composer validate --strict --no-check-lock
+
+      - name: Run PHPUnit Test Suite
+        run: vendor/bin/simple-phpunit $PHPUNIT_FLAGS
 
       - name: CS Fixer
         run: vendor/bin/php-cs-fixer fix --dry-run --diff
