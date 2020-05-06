@@ -6,6 +6,9 @@
 
         <services>
             <defaults public="false" />
+            <service id="maker.maker.a_prototype_maker" class="Symfony\Bundle\MakerBundle\Maker\APrototypeMaker">
+                <tag name="maker.command" />
+            </service>
 
             <service id="maker.maker.make_authenticator" class="Symfony\Bundle\MakerBundle\Maker\MakeAuthenticator">
                 <argument type="service" id="maker.file_manager" />
