@@ -122,6 +122,7 @@ class MakeDockerDatabase extends AbstractMaker
     public function generate(InputInterface $input, ConsoleStyle $io, Generator $generator)
     {
         $env = $this->getDatabaseEnvVars(
+            $input->getArgument('database'),
             $input->getArgument('root-password'),
             $input->getArgument('schema-name'),
             $input->getArgument('username'),
@@ -134,7 +135,7 @@ class MakeDockerDatabase extends AbstractMaker
 
         $this->yamlData['services'][$input->getArgument('service-name')] = [
             'image' => sprintf('%s:%s', $input->getArgument('database'), $input->getArgument('version')),
-            'environment' => DatabaseServices::
+            'environment' => $env
         ];
 //        dd(Yaml::dump($composeYaml, 20));
 
@@ -156,14 +157,18 @@ class MakeDockerDatabase extends AbstractMaker
         }
     }
 
-    //@TODO Replace w/ static service
-    private function getDatabaseEnvVars(string $rootPwd, string $schema, string $username, string $password): array
+    private function getDatabaseEnvVars(string $database, string $rootPwd, string $schema, string $username, string $password): array
     {
-        return [
-            'MYSQL_ROOT_PASSWORD' => $rootPwd,
-            'MYSQL_DATABASE' => $schema,
-            'MYSQL_USER' => $username,
-            'MYSQL_PASSWORD' => $password
-        ];
+        switch ($database) {
+            case 'mariadb':
+                return DatabaseServices::envMariaDb($schema, $rootPwd, $username, $password);
+                break;
+            case 'mysql':
+                return DatabaseServices::envMySql($schema, $rootPwd, $username, $password);
+                break;
+            case 'postgres':
+                return DatabaseServices::envPostgres($schema, $username, $password);
+                break;
+        }
     }
 }
