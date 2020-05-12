@@ -118,7 +118,10 @@ class MakeDockerDatabase extends AbstractMaker
             return;
         }
 
-        $input->setArgument('root-password', $io->askHidden('Root password'));
+        if ('postgres' !== $database) {
+            $input->setArgument('root-password', $io->askHidden('Root password'));
+        }
+
         $input->setArgument('username', $io->ask('Username:', 'user'));
         $input->setArgument('password', $io->askHidden('Password'));
     }
