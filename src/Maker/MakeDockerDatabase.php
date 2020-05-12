@@ -66,7 +66,7 @@ class MakeDockerDatabase extends AbstractMaker
 
         $databaseChoice = $io->choice(
             'Which database service will you be creating?',
-            ['MySQL', 'MariaDB']
+            ['MySQL', 'MariaDB', 'Postgres']
         );
 
         $io->text([sprintf('For a list of supported versions, check out %s', $this->getVersionLink($databaseChoice))]);
@@ -100,13 +100,17 @@ class MakeDockerDatabase extends AbstractMaker
 
         $input->setArgument('schema-name', $io->ask('What should we name the default schema?', str_replace(' ', '_', Str::getRandomTerm())));
 
-        $io->text([
-            'Default Credentials',
-            '',
-            'Root password: "password"',
+        $defaultCredentials = [
             'Username: "user"',
-            'User Password: "password"',
-        ]);
+            'Password: "password"',
+        ];
+
+        if ('postgres' !== $database) {
+            $defaultCredentials[] = 'Root Password: "password"';
+        }
+
+        $io->section('Default Credentials');
+        $io->text($defaultCredentials);
 
         $useDefaults = $io->confirm('Do you want to change the default credentials?', false);
 
@@ -153,6 +157,9 @@ class MakeDockerDatabase extends AbstractMaker
                 break;
             case 'MySQL':
                 return sprintf('%smysql', $docker);
+                break;
+            case 'Postgres':
+                return sprintf('%spostgres', $docker);
                 break;
         }
     }
