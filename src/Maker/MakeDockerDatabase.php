@@ -12,7 +12,6 @@ use Symfony\Bundle\MakerBundle\InputConfiguration;
 use Symfony\Bundle\MakerBundle\Str;
 use Symfony\Bundle\MakerBundle\Util\YamlSourceManipulator;
 use Symfony\Component\Console\Command\Command;
-use Symfony\Component\Console\Formatter\OutputFormatter;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Form\Util\StringUtil;
 use Symfony\Component\Yaml\Yaml;
@@ -50,6 +49,8 @@ class MakeDockerDatabase extends AbstractMaker
     public function interact(InputInterface $input, ConsoleStyle $io, Command $command)
     {
         $command
+            ->addArgument('docker-dir')
+            ->addArgument('existing-docker-compose')
             ->addArgument('service-name')
             ->addArgument('database')
             ->addArgument('version')
@@ -61,7 +62,13 @@ class MakeDockerDatabase extends AbstractMaker
 
         $io->section('- Docker Compose -');
 
-        $io->text(sprintf('Using %s/docker-compose.yaml', $this->fileManager->getRootDirectory()));
+        $input->setArgument('docker-dir', $io->ask('What directory should we store your docker files in?', $this->fileManager->getRootDirectory()));
+
+        $dockerComposeFile = sprintf('%s/docker-compose.yaml', $input->getArgument('docker-dir'));
+
+        $input->setArgument('existing-docker-compose', $this->fileManager->fileExists($dockerComposeFile));
+
+        $io->text(sprintf('Using %s', $dockerComposeFile));
         $io->newLine();
 
         $databaseChoice = $io->choice(
@@ -76,7 +83,7 @@ class MakeDockerDatabase extends AbstractMaker
         $input->setArgument('service-name', $database);
         $input->setArgument('version', $io->ask('What version would you like to use?', 'latest'));
 
-        if ($this->fileManager->fileExists($dockerComposeFile = 'docker-compose.yaml')) {
+        if ($input->getArgument('existing-docker-compose')) {
             $manipulator = new YamlSourceManipulator($this->fileManager->getFileContents($dockerComposeFile));
             $this->yamlData = $manipulator->getData();
 
