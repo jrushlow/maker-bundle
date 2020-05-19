@@ -13,6 +13,7 @@ use Symfony\Component\Yaml\Yaml;
 
 abstract class AbstractDockerMaker implements MakerInterface
 {
+    /** @var ComposeFileManipulator */
     protected $composeFileManipulator;
     protected $fileManager;
 
@@ -53,6 +54,18 @@ abstract class AbstractDockerMaker implements MakerInterface
             Yaml::class,
             'yaml'
         );
+    }
+
+    protected function serviceAlreadyDefinedQuestion(ConsoleStyle $io): void
+    {
+        $io->warning(sprintf('A service is already defined with the name "%s".', $database));
+
+        if (!$io->confirm(sprintf('Do you want to create a new %s Service?', $databaseChoice))) {
+            $io->success('Quit Early - No files were changed.');
+            $io->newLine();
+
+            exit();
+        }
     }
 
     protected function writeSuccessMessage(ConsoleStyle $io): void
