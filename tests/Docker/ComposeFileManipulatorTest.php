@@ -65,4 +65,12 @@ class ComposeFileManipulatorTest extends TestCase
 
         self::assertArrayNotHasKey('database', $result['services']);
     }
+
+    public function testServiceExists(): void
+    {
+        $manipulator = new ComposeFileManipulator("version: '3.7'\nservices: { database: }\n");
+
+        self::assertFalse($manipulator->serviceExists('mariadb'));
+        self::assertTrue($manipulator->serviceExists('database'));
+    }
 }

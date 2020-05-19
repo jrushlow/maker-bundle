@@ -31,6 +31,15 @@ class ComposeFileManipulator
         return $this->composeData;
     }
 
+    public function serviceExists(string $name): bool
+    {
+        if (array_key_exists('services', $this->composeData)) {
+            return array_key_exists($name, $this->composeData['services']);
+        }
+
+        return false;
+    }
+
     public function addDockerService(string $name, array $details): void
     {
         $this->composeData['services'][$name] = $details;
