@@ -112,7 +112,7 @@ class MakeDockerDatabase extends AbstractDockerMaker
         ]);
 
         //@TODO dump and write could be abstracted
-        $generator->dumpFile($this->fileManager->getRootDirectory().'/docker-compose.yaml', Yaml::dump($this->composeFileManipulator->getData(), 20));
+        $generator->dumpFile($this->dockerComposeFile, Yaml::dump($this->composeFileManipulator->getData(), 20));
         $generator->writeChanges();
     }
 
