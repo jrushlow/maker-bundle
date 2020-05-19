@@ -3,29 +3,16 @@
 namespace Symfony\Bundle\MakerBundle\Maker;
 
 use Symfony\Bundle\MakerBundle\ConsoleStyle;
-use Symfony\Bundle\MakerBundle\DependencyBuilder;
-use Symfony\Bundle\MakerBundle\Docker\ComposeFile;
 use Symfony\Bundle\MakerBundle\Docker\DatabaseServices;
-use Symfony\Bundle\MakerBundle\FileManager;
 use Symfony\Bundle\MakerBundle\Generator;
 use Symfony\Bundle\MakerBundle\InputConfiguration;
 use Symfony\Bundle\MakerBundle\Str;
-use Symfony\Bundle\MakerBundle\Util\YamlSourceManipulator;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
-use Symfony\Component\Form\Util\StringUtil;
 use Symfony\Component\Yaml\Yaml;
 
-class MakeDockerDatabase extends AbstractMaker
+class MakeDockerDatabase extends AbstractDockerMaker
 {
-    private $fileManager;
-    private $yamlData = [];
-
-    public function __construct(FileManager $fileManager)
-    {
-        $this->fileManager = $fileManager;
-    }
-
     public static function getCommandName(): string
     {
         return 'make:docker:database';
@@ -38,19 +25,11 @@ class MakeDockerDatabase extends AbstractMaker
         ;
     }
 
-    public function configureDependencies(DependencyBuilder $dependencies)
+    public function interact(InputInterface $input, ConsoleStyle $io, Command $command): void
     {
-        $dependencies->addClassDependency(
-            Yaml::class,
-            'yaml'
-        );
-    }
+        parent::interact($input, $io, $command);
 
-    public function interact(InputInterface $input, ConsoleStyle $io, Command $command)
-    {
         $command
-            ->addArgument('docker-dir')
-            ->addArgument('existing-docker-compose')
             ->addArgument('service-name')
             ->addArgument('database')
             ->addArgument('version')
@@ -60,15 +39,6 @@ class MakeDockerDatabase extends AbstractMaker
             ->addArgument('password', null, '', 'password')
         ;
 
-        $io->section('- Docker Compose -');
-
-        $input->setArgument('docker-dir', $io->ask('What directory should we store your docker files in?', $this->fileManager->getRootDirectory()));
-
-        $dockerComposeFile = sprintf('%s/docker-compose.yaml', $input->getArgument('docker-dir'));
-
-        $input->setArgument('existing-docker-compose', $this->fileManager->fileExists($dockerComposeFile));
-
-        $io->text(sprintf('Using %s', $dockerComposeFile));
         $io->newLine();
 
         $databaseChoice = $io->choice(
@@ -83,22 +53,15 @@ class MakeDockerDatabase extends AbstractMaker
         $input->setArgument('service-name', $database);
         $input->setArgument('version', $io->ask('What version would you like to use?', 'latest'));
 
-        if ($input->getArgument('existing-docker-compose')) {
-            $manipulator = new YamlSourceManipulator($this->fileManager->getFileContents($dockerComposeFile));
-            $this->yamlData = $manipulator->getData();
 
-            if (isset($this->yamlData['services'][$database])) {
-                $io->warning(sprintf('A service is already defined with the name "%s".', $database));
+        if ($this->composeFileManipulator->serviceExists($database)) {
+            $this->serviceAlreadyDefinedQuestion($io);
 
-                if (!$io->confirm(sprintf('Do you want to create a new %s Service?', $databaseChoice))) {
-                    $io->success('Quit Early - No files were changed.');
-                    $io->newLine();
-
-                    exit();
-                }
-
-                $input->setArgument('service-name', $io->ask(sprintf('What name should we call the new %s service? e.g. %s', $databaseChoice, str_replace(' ', '-', Str::getRandomTerm()))));
-            }
+            $input->setArgument('service-name', $io->ask(sprintf(
+                'What name should we call the new %s service? e.g. %s',
+                $databaseChoice,
+                str_replace(' ', '-', Str::getRandomTerm())
+            )));
         }
 
         $input->setArgument('database', $database);
@@ -143,17 +106,13 @@ class MakeDockerDatabase extends AbstractMaker
             $input->getArgument('password')
         );
 
-        if (empty($this->yamlData)) {
-            $this->yamlData = ComposeFile::getBasicStructure();
-        }
-
-        $this->yamlData['services'][$input->getArgument('service-name')] = [
+        $this->composeFileManipulator->addDockerService($input->getArgument('service-name'), [
             'image' => sprintf('%s:%s', $input->getArgument('database'), $input->getArgument('version')),
             'environment' => $env
-        ];
-//        dd(Yaml::dump($composeYaml, 20));
+        ]);
 
-        $generator->dumpFile($this->fileManager->getRootDirectory().'/docker-compose.yaml', Yaml::dump($this->yamlData, 20));
+        //@TODO dump and write could be abstracted
+        $generator->dumpFile($this->fileManager->getRootDirectory().'/docker-compose.yaml', Yaml::dump($this->composeFileManipulator->getData(), 20));
         $generator->writeChanges();
     }
 
