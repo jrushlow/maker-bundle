@@ -55,7 +55,7 @@ class MakeDockerDatabase extends AbstractDockerMaker
 
 
         if ($this->composeFileManipulator->serviceExists($database)) {
-            $this->serviceAlreadyDefinedQuestion($io);
+            $this->serviceAlreadyDefinedQuestion($io, $databaseChoice);
 
             $input->setArgument('service-name', $io->ask(sprintf(
                 'What name should we call the new %s service? e.g. %s',

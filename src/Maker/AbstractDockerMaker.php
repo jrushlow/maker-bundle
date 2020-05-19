@@ -56,11 +56,11 @@ abstract class AbstractDockerMaker implements MakerInterface
         );
     }
 
-    protected function serviceAlreadyDefinedQuestion(ConsoleStyle $io): void
+    protected function serviceAlreadyDefinedQuestion(ConsoleStyle $io, string $serviceName): void
     {
-        $io->warning(sprintf('A service is already defined with the name "%s".', $database));
+        $io->warning(sprintf('A service is already defined with the name "%s".', strtolower($serviceName)));
 
-        if (!$io->confirm(sprintf('Do you want to create a new %s Service?', $databaseChoice))) {
+        if (!$io->confirm(sprintf('Do you want to create a new %s Service?', $serviceName))) {
             $io->success('Quit Early - No files were changed.');
             $io->newLine();
 
