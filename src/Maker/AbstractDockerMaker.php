@@ -32,7 +32,7 @@ abstract class AbstractDockerMaker implements MakerInterface
 
         $io->section('- Docker Compose Setup-');
 
-        $this->dockerComposeFile = sprintf('%s/docker-compose.yaml', $input->getArgument('docker-dir'));
+        $this->dockerComposeFile = sprintf('%s/docker-compose.yaml', $this->fileManager->getRootDirectory());
 
         $this->dockerDataDir =$io->ask(
             'What directory should we store docker data in?',
