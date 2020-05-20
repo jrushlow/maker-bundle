@@ -88,8 +88,7 @@ class MakeDockerDatabase extends AbstractDockerMaker
 
         $io->section('- Networking -');
 
-        $getter = sprintf('port%s', $databaseChoice);
-        $ports = DatabaseServices::$getter();
+        $ports = DatabaseServices::getDefaultPorts($database);
 
         if ($io->ask(sprintf('Do you want to expose port %s to the host?', $ports[0]))) {
             $this->composeFileManipulator->exposePorts($ports);

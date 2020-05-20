@@ -4,20 +4,21 @@ namespace Symfony\Bundle\MakerBundle\Docker;
 
 class DatabaseServices
 {
-    // @TODO think we may be better off provide 1 public method e.g. getPorts(string $serviceName): array
-    // @TODO then internally use switch? to get the correct port map for the service. Same for the env's
-    public static function portMariaDb(string $port = '3306'): array
+    public static function getDefaultPorts(string $service): array
     {
-        return [$port];
-    }
+        $ports = [];
 
-    public static function portMySql(string $port = '3306'): array
-    {
-        return [$port];
-    }
-    public static function portPostgres(string $port = '5432'): array
-    {
-        return [$port];
+        switch ($service) {
+            case 'mariadb':
+            case 'mysql':
+                $ports = ['3306'];
+                break;
+            case 'postgres':
+                $ports = ['5432'];
+                break;
+        }
+
+        return $ports;
     }
 
     public static function envMariaDb(string $schema, string $rootPwd, string $user, string $password): array
