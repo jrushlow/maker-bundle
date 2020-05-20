@@ -37,6 +37,7 @@ class MakeDockerDatabase extends AbstractDockerMaker
             ->addArgument('root-password', null, '', 'password')
             ->addArgument('username', null, '', 'user')
             ->addArgument('password', null, '', 'password')
+            ->addArgument('expose-ports-to-host')
         ;
 
         $io->newLine();
@@ -90,9 +91,7 @@ class MakeDockerDatabase extends AbstractDockerMaker
 
         $ports = DatabaseServices::getDefaultPorts($database);
 
-        if ($io->ask(sprintf('Do you want to expose port %s to the host?', $ports[0]))) {
-            $this->composeFileManipulator->exposePorts($ports);
-        }
+        $input->setArgument('expose-ports-to-host', $io->ask(sprintf('Do you want to expose port %s to the host?', $ports[0])));
     }
 
     public function generate(InputInterface $input, ConsoleStyle $io, Generator $generator)
@@ -109,6 +108,13 @@ class MakeDockerDatabase extends AbstractDockerMaker
             'image' => sprintf('%s:%s', $input->getArgument('database'), $input->getArgument('version')),
             'environment' => $env
         ]);
+
+        if ($input->getArgument('expose-ports-to-host')) {
+            $this->composeFileManipulator->exposePorts(
+                $input->getArgument('service-name'),
+                DatabaseServices::getDefaultPorts($input->getArgument('database'))
+            );
+        }
 
         //@TODO dump and write could be abstracted
         $generator->dumpFile($this->dockerComposeFile, Yaml::dump($this->composeFileManipulator->getData(), 20));
