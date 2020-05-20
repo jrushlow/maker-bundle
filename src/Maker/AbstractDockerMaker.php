@@ -17,6 +17,7 @@ abstract class AbstractDockerMaker implements MakerInterface
     protected $composeFileManipulator;
     protected $fileManager;
     protected $dockerComposeFile;
+    protected $dockerDataDir;
 
     public function __construct(FileManager $fileManager)
     {
@@ -26,13 +27,17 @@ abstract class AbstractDockerMaker implements MakerInterface
     public function interact(InputInterface $input, ConsoleStyle $io, Command $command): void
     {
         $command
-            ->addArgument('docker-dir')
             ->addArgument('existing-docker-compose')
         ;
 
-        $input->setArgument('docker-dir', $io->ask('What directory should we store your docker files in?', $this->fileManager->getRootDirectory()));
+        $io->section('- Docker Compose Setup-');
 
         $this->dockerComposeFile = sprintf('%s/docker-compose.yaml', $input->getArgument('docker-dir'));
+
+        $this->dockerDataDir =$io->ask(
+            'What directory should we store docker data in?',
+            sprintf('%s/docker', $this->fileManager->getRootDirectory())
+        );
 
         $composeFileContents = '';
 
@@ -46,7 +51,8 @@ abstract class AbstractDockerMaker implements MakerInterface
 
         $this->composeFileManipulator = new ComposeFileManipulator($composeFileContents);
 
-        $io->text(sprintf('Using %s', $this->fileManager->absolutizePath($this->dockerComposeFile)));
+        $io->text('The docker-compose file is located in your project root directory.');
+        $io->text(sprintf('All other docker related files will be stored in %s', $this->dockerDataDir));
     }
 
     public function configureDependencies(DependencyBuilder $dependencies): void
