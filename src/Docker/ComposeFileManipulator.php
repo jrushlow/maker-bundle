@@ -49,4 +49,9 @@ class ComposeFileManipulator
     {
         unset($this->composeData['services'][$name]);
     }
+
+    public function exposePorts(string $service, array $ports): void
+    {
+        $this->composeData['services'][$service]['ports'] = $ports;
+    }
 }

@@ -85,6 +85,15 @@ class MakeDockerDatabase extends AbstractDockerMaker
         if ($io->confirm('Do you want to change the default credentials?', false)) {
             $this->changeDefaultCredentials($input, $io, $database);
         }
+
+        $io->section('- Networking -');
+
+        $getter = sprintf('port%s', $databaseChoice);
+        $ports = DatabaseServices::$getter();
+
+        if ($io->ask(sprintf('Do you want to expose port %s to the host?', $ports[0]))) {
+            $this->composeFileManipulator->exposePorts($ports);
+        }
     }
 
     public function generate(InputInterface $input, ConsoleStyle $io, Generator $generator)
