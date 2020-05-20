@@ -82,18 +82,9 @@ class MakeDockerDatabase extends AbstractDockerMaker
         $io->section('Default Credentials');
         $io->text($defaultCredentials);
 
-        $useDefaults = $io->confirm('Do you want to change the default credentials?', false);
-
-        if (!$useDefaults) {
-            return;
+        if ($io->confirm('Do you want to change the default credentials?', false)) {
+            $this->changeDefaultCredentials($input, $io, $database);
         }
-
-        if ('postgres' !== $database) {
-            $input->setArgument('root-password', $io->askHidden('Root password'));
-        }
-
-        $input->setArgument('username', $io->ask('Username:', 'user'));
-        $input->setArgument('password', $io->askHidden('Password'));
     }
 
     public function generate(InputInterface $input, ConsoleStyle $io, Generator $generator)
@@ -114,6 +105,16 @@ class MakeDockerDatabase extends AbstractDockerMaker
         //@TODO dump and write could be abstracted
         $generator->dumpFile($this->dockerComposeFile, Yaml::dump($this->composeFileManipulator->getData(), 20));
         $generator->writeChanges();
+    }
+
+    private function changeDefaultCredentials(InputInterface $input, ConsoleStyle $io, string $database): void
+    {
+        if ('postgres' !== $database) {
+            $input->setArgument('root-password', $io->askHidden('Root password'));
+        }
+
+        $input->setArgument('username', $io->ask('Username:', 'user'));
+        $input->setArgument('password', $io->askHidden('Password'));
     }
 
     private function getVersionLink(string $databaseName): string
