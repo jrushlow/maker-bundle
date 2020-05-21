@@ -22,12 +22,12 @@ abstract class AbstractDockerMaker implements MakerInterface
     protected $dockerComposeFile;
     protected $dockerDataDir = '';
 
-    public function __construct(FileManager $fileManager, DataDirGuesser $dataDirGuesser)
+    public function __construct(FileManager $fileManager)
     {
         $this->fileManager = $fileManager;
 
         //$TODO refactor the guesser, naming conventions, etc..
-        $this->guesser = $dataDirGuesser;
+        $this->guesser = new DataDirGuesser($fileManager);
     }
 
     public function interact(InputInterface $input, ConsoleStyle $io, Command $command): void
