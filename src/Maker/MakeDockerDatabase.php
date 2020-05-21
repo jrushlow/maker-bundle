@@ -47,7 +47,7 @@ class MakeDockerDatabase extends AbstractDockerMaker
             ['MySQL', 'MariaDB', 'Postgres']
         );
 
-        $io->text([sprintf('For a list of supported versions, check out %s', $this->getVersionLink($databaseChoice))]);
+        $io->text([sprintf('For a list of supported versions, check out https://hub.docker.com/_/%s', strtolower($databaseChoice))]);
 
         $database = strtolower($databaseChoice);
 
@@ -131,23 +131,6 @@ class MakeDockerDatabase extends AbstractDockerMaker
 
         $input->setArgument('username', $io->ask('Username:', 'user'));
         $input->setArgument('password', $io->askHidden('Password'));
-    }
-
-    private function getVersionLink(string $databaseName): string
-    {
-        $docker = 'https://hub.docker.com/_/';
-
-        switch ($databaseName) {
-            case 'MariaDB':
-                return sprintf('%smariadb', $docker);
-                break;
-            case 'MySQL':
-                return sprintf('%smysql', $docker);
-                break;
-            case 'Postgres':
-                return sprintf('%spostgres', $docker);
-                break;
-        }
     }
 
     private function getDatabaseEnvVars(string $database, string $rootPwd, string $schema, string $username, string $password): array
