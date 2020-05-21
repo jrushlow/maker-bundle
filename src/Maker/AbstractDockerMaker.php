@@ -57,6 +57,7 @@ abstract class AbstractDockerMaker implements MakerInterface
 
         $this->composeFileManipulator = new ComposeFileManipulator($composeFileContents);
 
+        // @todo duh! change this up to created or save the created for later
         $io->text('The docker-compose file is located in your project root directory.');
 //        $io->text(sprintf('All other docker related files will be stored in %s', $this->dockerDataDir));
     }
