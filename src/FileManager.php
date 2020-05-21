@@ -190,6 +190,11 @@ class FileManager
         return $this->twigDefaultPath.'/'.$filename;
     }
 
+    public function mkdir(string $path): void
+    {
+        $this->fs->mkdir($path);
+    }
+
     /**
      * Resolve '../' in paths (like real_path), but for non-existent files.
      *

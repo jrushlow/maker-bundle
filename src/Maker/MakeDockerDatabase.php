@@ -94,8 +94,10 @@ class MakeDockerDatabase extends AbstractDockerMaker
         $input->setArgument('expose-ports-to-host', $io->ask(sprintf('Do you want to expose port %s to the host?', $ports[0])));
     }
 
-    public function generate(InputInterface $input, ConsoleStyle $io, Generator $generator)
+    public function generate(InputInterface $input, ConsoleStyle $io, Generator $generator): void
     {
+        parent::generate($input, $io, $generator);
+
         $env = $this->getDatabaseEnvVars(
             $input->getArgument('database'),
             $input->getArgument('root-password'),

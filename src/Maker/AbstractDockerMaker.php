@@ -6,6 +6,7 @@ use Symfony\Bundle\MakerBundle\ConsoleStyle;
 use Symfony\Bundle\MakerBundle\DependencyBuilder;
 use Symfony\Bundle\MakerBundle\Docker\ComposeFileManipulator;
 use Symfony\Bundle\MakerBundle\FileManager;
+use Symfony\Bundle\MakerBundle\Generator;
 use Symfony\Bundle\MakerBundle\MakerInterface;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
@@ -53,6 +54,13 @@ abstract class AbstractDockerMaker implements MakerInterface
 
         $io->text('The docker-compose file is located in your project root directory.');
         $io->text(sprintf('All other docker related files will be stored in %s', $this->dockerDataDir));
+    }
+
+    public function generate(InputInterface $input, ConsoleStyle $io, Generator $generator): void
+    {
+        if (!$this->fileManager->fileExists($this->dockerDataDir)) {
+            $this->fileManager->mkdir($this->dockerDataDir);
+        }
     }
 
     public function configureDependencies(DependencyBuilder $dependencies): void
