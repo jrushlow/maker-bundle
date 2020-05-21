@@ -193,6 +193,15 @@ class FileManager
     public function mkdir(string $path): void
     {
         $this->fs->mkdir($path);
+
+        //@todo use the link formatter here
+        if ($this->io) {
+            $this->io->comment(sprintf(
+                '%s: %s',
+                '<fg=blue>created</>',
+                $path
+            ));
+        }
     }
 
     /**
