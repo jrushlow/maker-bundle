@@ -33,6 +33,7 @@ class MakeDockerDatabase extends AbstractDockerMaker
             ->addArgument('service-name')
             ->addArgument('database')
             ->addArgument('version')
+            ->addArgument('customize', null, '', false)
             ->addArgument('schema-name')
             ->addArgument('root-password', null, '', 'password')
             ->addArgument('username', null, '', 'user')
@@ -69,47 +70,36 @@ class MakeDockerDatabase extends AbstractDockerMaker
 
         $io->section(sprintf('- %s -', $databaseChoice));
 
-        $input->setArgument('schema-name', $io->ask('What should we name the default schema?', str_replace(' ', '_', Str::getRandomTerm())));
+        if ($io->confirm('Do you want to customize this service?', false)) {
+            $input->setArgument('customize', true);
 
-        $defaultCredentials = [
-            'Username: "user"',
-            'Password: "password"',
-        ];
-
-        if ('postgres' !== $database) {
-            $defaultCredentials[] = 'Root Password: "password"';
-        }
-
-        $io->section('Default Credentials');
-        $io->text($defaultCredentials);
-
-        if ($io->confirm('Do you want to change the default credentials?', false)) {
-            $this->changeDefaultCredentials($input, $io, $database);
+            $this->customizeService($input, $io);
         }
 
         $io->section('- Networking -');
 
         $ports = DatabaseServices::getDefaultPorts($database);
 
-        $input->setArgument('expose-ports-to-host', $io->ask(sprintf('Do you want to expose port %s to the host?', $ports[0])));
+        $input->setArgument('expose-ports-to-host', $io->confirm(sprintf('Do you want to expose port %s to the host?', $ports[0])));
     }
 
     public function generate(InputInterface $input, ConsoleStyle $io, Generator $generator): void
     {
         parent::generate($input, $io, $generator);
 
-        $env = $this->getDatabaseEnvVars(
-            $input->getArgument('database'),
-            $input->getArgument('root-password'),
-            $input->getArgument('schema-name'),
-            $input->getArgument('username'),
-            $input->getArgument('password')
-        );
+        $options['image'] = sprintf('%s:%s', $input->getArgument('database'), $input->getArgument('version'));
 
-        $this->composeFileManipulator->addDockerService($input->getArgument('service-name'), [
-            'image' => sprintf('%s:%s', $input->getArgument('database'), $input->getArgument('version')),
-            'environment' => $env
-        ]);
+        if ($input->getArgument('customize')) {
+            $options['environment'] = $this->getDatabaseEnvVars(
+                $input->getArgument('database'),
+                $input->getArgument('root-password'),
+                $input->getArgument('schema-name'),
+                $input->getArgument('username'),
+                $input->getArgument('password')
+            );
+        }
+
+        $this->composeFileManipulator->addDockerService($input->getArgument('service-name'), $options);
 
         if ($input->getArgument('expose-ports-to-host')) {
             $this->composeFileManipulator->exposePorts(
@@ -121,6 +111,27 @@ class MakeDockerDatabase extends AbstractDockerMaker
         //@TODO dump and write could be abstracted
         $generator->dumpFile($this->dockerComposeFile, Yaml::dump($this->composeFileManipulator->getData(), 20));
         $generator->writeChanges();
+    }
+
+    private function customizeService(InputInterface $input, ConsoleStyle $io): void
+    {
+        $input->setArgument('schema-name', $io->ask('What should we name the default schema?', str_replace(' ', '_', Str::getRandomTerm())));
+
+        $defaultCredentials = [
+            'Username: "user"',
+            'Password: "password"',
+        ];
+
+        if ('postgres' !== $input->getArgument('database')) {
+            $defaultCredentials[] = 'Root Password: "password"';
+        }
+
+        $io->section('Default Credentials');
+        $io->text($defaultCredentials);
+
+        if ($io->confirm('Do you want to change the default credentials?', false)) {
+            $this->changeDefaultCredentials($input, $io, $input->getArgument('database'));
+        }
     }
 
     private function changeDefaultCredentials(InputInterface $input, ConsoleStyle $io, string $database): void
