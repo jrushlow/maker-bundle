@@ -20,7 +20,7 @@ abstract class AbstractDockerMaker implements MakerInterface
     protected $fileManager;
     protected $guesser;
     protected $dockerComposeFile;
-    protected $dockerDataDir;
+    protected $dockerDataDir = '';
 
     public function __construct(FileManager $fileManager, DataDirGuesser $dataDirGuesser)
     {
@@ -63,7 +63,7 @@ abstract class AbstractDockerMaker implements MakerInterface
 
     public function generate(InputInterface $input, ConsoleStyle $io, Generator $generator): void
     {
-        if (!$this->fileManager->fileExists($this->dockerDataDir)) {
+        if (!empty($this->dockerDataDir) && !$this->fileManager->fileExists($this->dockerDataDir)) {
             $this->fileManager->mkdir($this->dockerDataDir);
         }
     }
