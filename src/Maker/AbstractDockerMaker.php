@@ -5,6 +5,7 @@ namespace Symfony\Bundle\MakerBundle\Maker;
 use Symfony\Bundle\MakerBundle\ConsoleStyle;
 use Symfony\Bundle\MakerBundle\DependencyBuilder;
 use Symfony\Bundle\MakerBundle\Docker\ComposeFileManipulator;
+use Symfony\Bundle\MakerBundle\Docker\DataDirGuesser;
 use Symfony\Bundle\MakerBundle\FileManager;
 use Symfony\Bundle\MakerBundle\Generator;
 use Symfony\Bundle\MakerBundle\MakerInterface;
@@ -17,12 +18,16 @@ abstract class AbstractDockerMaker implements MakerInterface
     /** @var ComposeFileManipulator */
     protected $composeFileManipulator;
     protected $fileManager;
+    protected $guesser;
     protected $dockerComposeFile;
     protected $dockerDataDir;
 
-    public function __construct(FileManager $fileManager)
+    public function __construct(FileManager $fileManager, DataDirGuesser $dataDirGuesser)
     {
         $this->fileManager = $fileManager;
+
+        //$TODO refactor the guesser, naming conventions, etc..
+        $this->guesser = $dataDirGuesser;
     }
 
     public function interact(InputInterface $input, ConsoleStyle $io, Command $command): void
@@ -35,10 +40,10 @@ abstract class AbstractDockerMaker implements MakerInterface
 
         $this->dockerComposeFile = sprintf('%s/docker-compose.yaml', $this->fileManager->getRootDirectory());
 
-        $this->dockerDataDir =$io->ask(
-            'What directory should we store docker data in?',
-            sprintf('%s/docker', $this->fileManager->getRootDirectory())
-        );
+//        $this->dockerDataDir =$io->ask(
+//            'What directory should we store docker data in?',
+//            sprintf('%s/docker', $this->fileManager->getRootDirectory())
+//        );
 
         $composeFileContents = '';
 
@@ -53,7 +58,7 @@ abstract class AbstractDockerMaker implements MakerInterface
         $this->composeFileManipulator = new ComposeFileManipulator($composeFileContents);
 
         $io->text('The docker-compose file is located in your project root directory.');
-        $io->text(sprintf('All other docker related files will be stored in %s', $this->dockerDataDir));
+//        $io->text(sprintf('All other docker related files will be stored in %s', $this->dockerDataDir));
     }
 
     public function generate(InputInterface $input, ConsoleStyle $io, Generator $generator): void
@@ -68,6 +73,26 @@ abstract class AbstractDockerMaker implements MakerInterface
         $dependencies->addClassDependency(
             Yaml::class,
             'yaml'
+        );
+    }
+
+    protected function dataDirQuestion(ConsoleStyle $io): void
+    {
+        $guessedDir = $this->guesser->guessDataDir();
+        $confirm = false;
+
+        if (null !== $guessedDir) {
+            $confirm = $io->confirm(sprintf('Should we use %s to store docker related files and container data?', $guessedDir));
+        }
+
+        if ($confirm) {
+            $this->dockerDataDir = $guessedDir;
+            return;
+        }
+
+        $this->dockerDataDir = $io->ask(
+            'What directory should we store docker related files and container data in?',
+            sprintf('%s/docker', $this->fileManager->getRootDirectory())
         );
     }
 
