@@ -143,9 +143,11 @@ class MakeDockerDatabase extends AbstractDockerMaker
             $this->dataDirQuestion($io);
             $this->createDataDir($this->dockerDataDir);
 
-            $this->fileManager->mkdir(sprintf('%s/%s/data', $this->dockerDataDir, $input->getArgument('service-name')));
+            $serviceDataDir = sprintf('%s/%s/data', $this->dockerDataDir, $input->getArgument('service-name'));
 
-            $this->composeFileManipulator->addVolume($database, '', DatabaseServices::getDataLocation($database));
+            $this->fileManager->mkdir($serviceDataDir);
+
+            $this->composeFileManipulator->addVolume($database, $serviceDataDir, DatabaseServices::getDataLocation($database));
         }
 
         $io->section('- Networking -');
