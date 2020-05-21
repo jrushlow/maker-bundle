@@ -29,6 +29,7 @@ class MakeDockerDatabase extends AbstractDockerMaker
     {
         parent::interact($input, $io, $command);
 
+        //@TODO am i supposed to even be allowed to set defaults on null modes. hmmmm
         $command
             ->addArgument('service-name')
             ->addArgument('database')
@@ -38,7 +39,7 @@ class MakeDockerDatabase extends AbstractDockerMaker
             ->addArgument('root-password', null, '', 'password')
             ->addArgument('username', null, '', 'user')
             ->addArgument('password', null, '', 'password')
-            ->addArgument('expose-ports-to-host')
+            ->addArgument('expose-ports-to-host', null, '', true)
         ;
 
         $io->newLine();
@@ -73,7 +74,7 @@ class MakeDockerDatabase extends AbstractDockerMaker
         $defaults = [
             sprintf('Using default %s credentials.', $databaseChoice),
             'A default schema is not defined.', // @TODO verify this across all db images
-            '?PORT? as exposed to the host.',
+            sprintf('Port(s) %s are exposed to the host.', ...(DatabaseServices::getDefaultPorts($database))),
             'Data is not persisted to the host.'
         ];
 
@@ -84,12 +85,6 @@ class MakeDockerDatabase extends AbstractDockerMaker
 
             $this->customizeService($input, $io);
         }
-
-        $io->section('- Networking -');
-
-        $ports = DatabaseServices::getDefaultPorts($database);
-
-        $input->setArgument('expose-ports-to-host', $io->confirm(sprintf('Do you want to expose port %s to the host?', $ports[0])));
     }
 
     public function generate(InputInterface $input, ConsoleStyle $io, Generator $generator): void
@@ -146,6 +141,12 @@ class MakeDockerDatabase extends AbstractDockerMaker
             $this->dataDirQuestion($io);
             $this->createDataDir($this->dockerDataDir);
         }
+
+        $io->section('- Networking -');
+
+        $ports = DatabaseServices::getDefaultPorts($input->getArgument('database'));
+
+        $input->setArgument('expose-ports-to-host', $io->confirm(sprintf('Do you want to expose port(s) %s to the host?', ...$ports)));
     }
 
     private function changeDefaultCredentials(InputInterface $input, ConsoleStyle $io, string $database): void
