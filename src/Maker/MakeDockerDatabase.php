@@ -132,6 +132,11 @@ class MakeDockerDatabase extends AbstractDockerMaker
         if ($io->confirm('Do you want to change the default credentials?', false)) {
             $this->changeDefaultCredentials($input, $io, $input->getArgument('database'));
         }
+
+        if ($io->confirm('Do you want to persist container data to the host? e.g. Database files')) {
+            $this->dataDirQuestion($io);
+            $this->createDataDir($this->dockerDataDir);
+        }
     }
 
     private function changeDefaultCredentials(InputInterface $input, ConsoleStyle $io, string $database): void

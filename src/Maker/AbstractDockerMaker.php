@@ -63,9 +63,6 @@ abstract class AbstractDockerMaker implements MakerInterface
 
     public function generate(InputInterface $input, ConsoleStyle $io, Generator $generator): void
     {
-        if (!empty($this->dockerDataDir) && !$this->fileManager->fileExists($this->dockerDataDir)) {
-            $this->fileManager->mkdir($this->dockerDataDir);
-        }
     }
 
     public function configureDependencies(DependencyBuilder $dependencies): void
@@ -94,6 +91,14 @@ abstract class AbstractDockerMaker implements MakerInterface
             'What directory should we store docker related files and container data in?',
             sprintf('%s/docker', $this->fileManager->getRootDirectory())
         );
+    }
+
+    // @todo This method and the one above should be consolidated
+    protected function createDataDir(string $path): void
+    {
+        if (!empty($this->dockerDataDir) && !$this->fileManager->fileExists($this->dockerDataDir)) {
+            $this->fileManager->mkdir($this->dockerDataDir);
+        }
     }
 
     protected function serviceAlreadyDefinedQuestion(ConsoleStyle $io, string $serviceName): void
