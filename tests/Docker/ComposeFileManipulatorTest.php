@@ -73,4 +73,14 @@ class ComposeFileManipulatorTest extends TestCase
         self::assertFalse($manipulator->serviceExists('mariadb'));
         self::assertTrue($manipulator->serviceExists('database'));
     }
+
+    public function testAddVolume(): void
+    {
+        $manipulator = new ComposeFileManipulator("version: '3.7'\nservices: { database: }\n");
+        $manipulator->addVolume('database', '/host-path', '/container/path');
+
+        $result = $manipulator->getData();
+
+        self::assertSame(['/host-path:/container/path'], $result['services']['database']['volumes']);
+    }
 }

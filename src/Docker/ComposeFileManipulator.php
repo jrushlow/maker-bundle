@@ -54,4 +54,9 @@ class ComposeFileManipulator
     {
         $this->composeData['services'][$service]['ports'] = $ports;
     }
+
+    public function addVolume(string $service, string $hostPath, string $containerPath): void
+    {
+        $this->composeData['services'][$service]['volumes'][] = sprintf('%s:%s', $hostPath, $containerPath);
+    }
 }

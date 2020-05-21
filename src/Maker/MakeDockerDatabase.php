@@ -119,6 +119,8 @@ class MakeDockerDatabase extends AbstractDockerMaker
 
     private function customizeService(InputInterface $input, ConsoleStyle $io): void
     {
+        $database = $input->getArgument('database');
+
         $input->setArgument('schema-name', $io->ask('What should we name the default schema?', str_replace(' ', '_', Str::getRandomTerm())));
 
         $defaultCredentials = [
@@ -126,7 +128,7 @@ class MakeDockerDatabase extends AbstractDockerMaker
             'Password: "password"',
         ];
 
-        if ('postgres' !== $input->getArgument('database')) {
+        if ('postgres' !== $database) {
             $defaultCredentials[] = 'Root Password: "password"';
         }
 
@@ -134,12 +136,16 @@ class MakeDockerDatabase extends AbstractDockerMaker
         $io->text($defaultCredentials);
 
         if ($io->confirm('Do you want to change the default credentials?', false)) {
-            $this->changeDefaultCredentials($input, $io, $input->getArgument('database'));
+            $this->changeDefaultCredentials($input, $io, $database);
         }
 
         if ($io->confirm('Do you want to persist container data to the host? e.g. Database files')) {
             $this->dataDirQuestion($io);
             $this->createDataDir($this->dockerDataDir);
+
+            $this->fileManager->mkdir(sprintf('%s/%s/data', $this->dockerDataDir, $input->getArgument('service-name')));
+
+            $this->composeFileManipulator->addVolume($database, '', DatabaseServices::getDataLocation($database));
         }
 
         $io->section('- Networking -');

@@ -21,6 +21,17 @@ class DatabaseServices
         return $ports;
     }
 
+    public static function getDataLocation(string $service): string
+    {
+        switch ($service) {
+            case 'mariadb':
+            case 'mysql':
+                return '/var/lib/mysql';
+            case 'postgres':
+                return '/var/lib/postgresql/data';
+        }
+    }
+
     public static function envMariaDb(string $schema, string $rootPwd, string $user, string $password): array
     {
         return [
