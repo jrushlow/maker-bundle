@@ -70,6 +70,15 @@ class MakeDockerDatabase extends AbstractDockerMaker
 
         $io->section(sprintf('- %s -', $databaseChoice));
 
+        $defaults = [
+            sprintf('Using default %s credentials.', $databaseChoice),
+            'A default schema is not defined.', // @TODO verify this across all db images
+            '?PORT? as exposed to the host.',
+            'Data is not persisted to the host.'
+        ];
+
+        $io->text($defaults);
+
         if ($io->confirm('Do you want to customize this service?', false)) {
             $input->setArgument('customize', true);
 
