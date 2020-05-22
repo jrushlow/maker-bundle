@@ -319,7 +319,7 @@ class YamlSourceManipulator
         if (\is_int($key)) {
             if ($this->isCurrentArrayMultiline()) {
                 if ($this->isCurrentArraySequence()) {
-                    $newYamlValue = '- '.$this->convertToYaml($value);
+                    $newYamlValue = '- ' . $this->convertToYaml($value);
                 } else {
                     // this is an associative array, but an indexed key
                     // is being added. We can't use the "- " format
