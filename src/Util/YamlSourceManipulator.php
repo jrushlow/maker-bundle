@@ -53,7 +53,11 @@ class YamlSourceManipulator
     public function __construct(string $contents)
     {
         $this->contents = $contents;
-        $this->currentData = Yaml::parse($contents);
+        $this->currentData = [];
+
+        if (!empty($contents)) {
+            $this->currentData = Yaml::parse($contents);
+        }
 
         if (!\is_array($this->currentData)) {
             throw new \InvalidArgumentException('Only YAML with a top-level array structure is supported');
@@ -267,7 +271,7 @@ class YamlSourceManipulator
     {
         $extraOffset = 0;
         $firstItemInArray = false;
-        if (empty($this->getCurrentData(1))) {
+        if (!empty($this->contents) && empty($this->getCurrentData(1))) {
             // The array that we're appending is empty:
 
             // First, fix the "type" - it could be changing from a sequence to a hash or vice versa

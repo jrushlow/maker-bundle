@@ -48,6 +48,15 @@ class YamlSourceManipulatorTest extends TestCase
         $this->assertSame($expectedSource, $actualContents);
     }
 
+    public function testManipulateEmptyYamlFile(): void
+    {
+        $manipulator = new YamlSourceManipulator('');
+        $manipulator->setData(['key' => 'value']);
+
+        self::assertSame(['key' => 'value'], $manipulator->getData());
+        self::assertSame("key: value\n", $manipulator->getContents());
+    }
+
     private function getYamlDataTests()
     {
         $finder = new Finder();
