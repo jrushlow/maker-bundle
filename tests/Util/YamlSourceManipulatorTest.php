@@ -57,6 +57,18 @@ class YamlSourceManipulatorTest extends TestCase
         self::assertSame("key: value\n", $manipulator->getContents());
     }
 
+    public function testCommentAddedToRoot(): void
+    {
+        $manipulator = new YamlSourceManipulator("key: value\n");
+
+        $data = $manipulator->getData();
+        $data[] = $manipulator->createCommentLine('I am a comment.');
+
+        $manipulator->setData($data);
+
+        self::assertSame("key: value\n# I am a comment.");
+    }
+
     private function getYamlDataTests()
     {
         $finder = new Finder();
