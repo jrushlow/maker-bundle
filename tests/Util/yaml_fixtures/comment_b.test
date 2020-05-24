@@ -1,0 +1,16 @@
+docker:
+    version: '3.7'
+===
+$data['docker'][] = '__COMMENT__ environment:';
+$data['docker'][] = '__COMMENT__     MYSQL_USER: user';
+$data['docker'][] = '__COMMENT__     MYSQL_PASSWORD: password';
+$data['docker'][] = '__COMMENT__     MYSQL_ROOT_PASSWORD: password';
+$data['docker'][] = '__COMMENT__     MYSQL_DATABASE: database';
+===
+docker:
+    version => '3.7'
+    # environment:
+        # MYSQL_USER: user
+        # MYSQL_PASSWORD: password
+        # MYSQL_ROOT_PASSWORD: password
+        # MYSQL_DATABASE: database
