@@ -91,7 +91,9 @@ class MakeDockerDatabase extends AbstractDockerMaker
     {
         parent::generate($input, $io, $generator);
 
-        $options['image'] = sprintf('%s:%s', $input->getArgument('database'), $input->getArgument('version'));
+        $service = DatabaseServices::getDatabase($input->getArgument('database'), $input->getArgument('version'));
+
+//        $options['image'] = sprintf('%s:%s', $input->getArgument('database'), $input->getArgument('version'));
 
         if ($input->getArgument('customize')) {
             $options['environment'] = $this->getDatabaseEnvVars(
@@ -103,14 +105,14 @@ class MakeDockerDatabase extends AbstractDockerMaker
             );
         }
 
-        $this->composeFileManipulator->addDockerService($input->getArgument('service-name'), $options);
+        $this->composeFileManipulator->addDockerService($input->getArgument('service-name'), $service);
 
-        if ($input->getArgument('expose-ports-to-host')) {
-            $this->composeFileManipulator->exposePorts(
-                $input->getArgument('service-name'),
-                DatabaseServices::getDefaultPorts($input->getArgument('database'))
-            );
-        }
+//        if ($input->getArgument('expose-ports-to-host')) {
+//            $this->composeFileManipulator->exposePorts(
+//                $input->getArgument('service-name'),
+//                DatabaseServices::getDefaultPorts($input->getArgument('database'))
+//            );
+//        }
 
         //@TODO dump and write could be abstracted
         $generator->dumpFile($this->dockerComposeFile, Yaml::dump($this->composeFileManipulator->getData(), 20));

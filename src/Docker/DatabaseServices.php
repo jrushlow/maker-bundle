@@ -4,6 +4,17 @@ namespace Symfony\Bundle\MakerBundle\Docker;
 
 class DatabaseServices
 {
+    public static function getDatabase(string $name, string $version): array
+    {
+        switch ($name) {
+            case 'mariadb':
+                return [
+                    'image' => sprintf('mariadb:%s', $version),
+                    'ports' => ['3306']
+                ];
+        }
+    }
+
     public static function getDefaultPorts(string $service): array
     {
         $ports = [];
