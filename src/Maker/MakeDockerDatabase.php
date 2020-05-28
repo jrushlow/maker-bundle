@@ -29,17 +29,10 @@ class MakeDockerDatabase extends AbstractDockerMaker
     {
         parent::interact($input, $io, $command);
 
-        //@TODO am i supposed to even be allowed to set defaults on null modes. hmmmm
         $command
             ->addArgument('service-name')
             ->addArgument('database')
             ->addArgument('version')
-            ->addArgument('customize', null, '', false)
-            ->addArgument('schema-name')
-            ->addArgument('root-password', null, '', 'password')
-            ->addArgument('username', null, '', 'user')
-            ->addArgument('password', null, '', 'password')
-            ->addArgument('expose-ports-to-host', null, '', true)
         ;
 
         $io->newLine();
@@ -72,19 +65,10 @@ class MakeDockerDatabase extends AbstractDockerMaker
         $io->section(sprintf('- %s -', $databaseChoice));
 
         $defaults = [
-            sprintf('Using default %s credentials.', $databaseChoice),
-            'A default schema is not defined.', // @TODO verify this across all db images
             sprintf('Port(s) %s are exposed to the host.', ...(DatabaseServices::getDefaultPorts($database))),
-            'Data is not persisted to the host.'
         ];
 
         $io->text($defaults);
-
-        if ($io->confirm('Do you want to customize this service?', false)) {
-            $input->setArgument('customize', true);
-
-            $this->customizeService($input, $io);
-        }
     }
 
     public function generate(InputInterface $input, ConsoleStyle $io, Generator $generator): void
@@ -93,94 +77,10 @@ class MakeDockerDatabase extends AbstractDockerMaker
 
         $service = DatabaseServices::getDatabase($input->getArgument('database'), $input->getArgument('version'));
 
-//        $options['image'] = sprintf('%s:%s', $input->getArgument('database'), $input->getArgument('version'));
-
-        if ($input->getArgument('customize')) {
-            $options['environment'] = $this->getDatabaseEnvVars(
-                $input->getArgument('database'),
-                $input->getArgument('root-password'),
-                $input->getArgument('schema-name'),
-                $input->getArgument('username'),
-                $input->getArgument('password')
-            );
-        }
-
         $this->composeFileManipulator->addDockerService($input->getArgument('service-name'), $service);
-
-//        if ($input->getArgument('expose-ports-to-host')) {
-//            $this->composeFileManipulator->exposePorts(
-//                $input->getArgument('service-name'),
-//                DatabaseServices::getDefaultPorts($input->getArgument('database'))
-//            );
-//        }
 
         //@TODO dump and write could be abstracted
         $generator->dumpFile($this->dockerComposeFile, Yaml::dump($this->composeFileManipulator->getData(), 20));
         $generator->writeChanges();
-    }
-
-    private function customizeService(InputInterface $input, ConsoleStyle $io): void
-    {
-        $database = $input->getArgument('database');
-
-        $input->setArgument('schema-name', $io->ask('What should we name the default schema?', str_replace(' ', '_', Str::getRandomTerm())));
-
-        $defaultCredentials = [
-            'Username: "user"',
-            'Password: "password"',
-        ];
-
-        if ('postgres' !== $database) {
-            $defaultCredentials[] = 'Root Password: "password"';
-        }
-
-        $io->section('Default Credentials');
-        $io->text($defaultCredentials);
-
-        if ($io->confirm('Do you want to change the default credentials?', false)) {
-            $this->changeDefaultCredentials($input, $io, $database);
-        }
-
-        if ($io->confirm('Do you want to persist container data to the host? e.g. Database files')) {
-            $this->dataDirQuestion($io);
-            $this->createDataDir($this->dockerDataDir);
-
-            $serviceDataDir = sprintf('%s/%s/data', $this->dockerDataDir, $input->getArgument('service-name'));
-
-            $this->fileManager->mkdir($serviceDataDir);
-
-            $this->composeFileManipulator->addVolume($database, $serviceDataDir, DatabaseServices::getDataLocation($database));
-        }
-
-        $io->section('- Networking -');
-
-        $ports = DatabaseServices::getDefaultPorts($input->getArgument('database'));
-
-        $input->setArgument('expose-ports-to-host', $io->confirm(sprintf('Do you want to expose port(s) %s to the host?', ...$ports)));
-    }
-
-    private function changeDefaultCredentials(InputInterface $input, ConsoleStyle $io, string $database): void
-    {
-        if ('postgres' !== $database) {
-            $input->setArgument('root-password', $io->askHidden('Root password'));
-        }
-
-        $input->setArgument('username', $io->ask('Username:', 'user'));
-        $input->setArgument('password', $io->askHidden('Password'));
-    }
-
-    private function getDatabaseEnvVars(string $database, string $rootPwd, string $schema, string $username, string $password): array
-    {
-        switch ($database) {
-            case 'mariadb':
-                return DatabaseServices::envMariaDb($schema, $rootPwd, $username, $password);
-                break;
-            case 'mysql':
-                return DatabaseServices::envMySql($schema, $rootPwd, $username, $password);
-                break;
-            case 'postgres':
-                return DatabaseServices::envPostgres($schema, $username, $password);
-                break;
-        }
     }
 }
