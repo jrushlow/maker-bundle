@@ -10,6 +10,9 @@ class DatabaseServices
             case 'mariadb':
                 return [
                     'image' => sprintf('mariadb:%s', $version),
+                    'environment' => [
+                        'MYSQL_ROOT_PASSWORD' => 'password'
+                    ],
                     'ports' => ['3306:3306']
                 ];
             case 'mysql':
