@@ -12,6 +12,16 @@ class DatabaseServices
                     'image' => sprintf('mariadb:%s', $version),
                     'ports' => ['3306:3306']
                 ];
+            case 'mysql':
+                return [
+                    'image' => sprintf('mysql:%s', $version),
+                    'ports' => ['3306']
+                ];
+            case 'postgres':
+                return [
+                    'image' => sprintf('postgres:%s', $version),
+                    'ports' => ['5432']
+                ];
         }
     }
 
