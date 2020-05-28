@@ -18,7 +18,10 @@ class DatabaseServices
             case 'mysql':
                 return [
                     'image' => sprintf('mysql:%s', $version),
-                    'ports' => ['3306']
+                    'environment' => [
+                        'MYSQL_ROOT_PASSWORD' => 'password'
+                    ],
+                    'ports' => ['3306:3306']
                 ];
             case 'postgres':
                 return [
