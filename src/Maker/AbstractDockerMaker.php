@@ -2,12 +2,14 @@
 
 namespace Symfony\Bundle\MakerBundle\Maker;
 
+use Symfony\Bundle\MakerBundle\ArgumentCollection;
 use Symfony\Bundle\MakerBundle\ConsoleStyle;
 use Symfony\Bundle\MakerBundle\DependencyBuilder;
 use Symfony\Bundle\MakerBundle\Docker\ComposeFileManipulator;
 use Symfony\Bundle\MakerBundle\Docker\DataDirGuesser;
 use Symfony\Bundle\MakerBundle\FileManager;
 use Symfony\Bundle\MakerBundle\Generator;
+use Symfony\Bundle\MakerBundle\MakerArgument;
 use Symfony\Bundle\MakerBundle\MakerInterface;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
@@ -18,39 +20,36 @@ abstract class AbstractDockerMaker implements MakerInterface
     /** @var ComposeFileManipulator */
     protected $composeFileManipulator;
     protected $fileManager;
-    protected $guesser;
-    protected $dockerComposeFile;
-    protected $dockerDataDir = '';
+//    protected $guesser;
+    protected $arguments;
 
     public function __construct(FileManager $fileManager)
     {
         $this->fileManager = $fileManager;
 
-        //$TODO refactor the guesser, naming conventions, etc..
-        $this->guesser = new DataDirGuesser($fileManager);
+//        //$TODO refactor the guesser, naming conventions, etc..
+//        $this->guesser = new DataDirGuesser($fileManager);
+        $this->arguments = new ArgumentCollection();
+
+        $arguments = ['existing-setup', 'compose-file', 'data-dir', 'service-name', 'database-name', 'version'];
+
+        foreach ($arguments as $argument) {
+            $this->arguments->addArgument(new MakerArgument($argument));
+        }
     }
 
     public function interact(InputInterface $input, ConsoleStyle $io, Command $command): void
     {
-        $command
-            ->addArgument('existing-docker-compose')
-        ;
-
         $io->section('- Docker Compose Setup-');
 
-        $this->dockerComposeFile = sprintf('%s/docker-compose.yaml', $this->fileManager->getRootDirectory());
-
-//        $this->dockerDataDir =$io->ask(
-//            'What directory should we store docker data in?',
-//            sprintf('%s/docker', $this->fileManager->getRootDirectory())
-//        );
+        $this->arguments->setArgumentValue('compose-file', sprintf('%s/docker-compose.yaml', $this->fileManager->getRootDirectory()));
 
         $composeFileContents = '';
 
-        if ($this->fileManager->fileExists($this->dockerComposeFile)) {
+        if ($this->fileManager->fileExists($this->arguments->getArgumentValue('compose-file'))) {
             $input->setArgument('existing-docker-compose', true);
 
-            $composeFileContents = $this->fileManager->getFileContents($this->dockerComposeFile);
+            $composeFileContents = $this->fileManager->getFileContents($this->arguments->getArgumentValue('compose-file'));
 
             $io->text('Existing Docker Compose file found.');
         }
@@ -59,7 +58,6 @@ abstract class AbstractDockerMaker implements MakerInterface
 
         // @todo duh! change this up to created or save the created for later
         $io->text('The docker-compose file is located in your project root directory.');
-//        $io->text(sprintf('All other docker related files will be stored in %s', $this->dockerDataDir));
     }
 
     public function generate(InputInterface $input, ConsoleStyle $io, Generator $generator): void
@@ -74,33 +72,33 @@ abstract class AbstractDockerMaker implements MakerInterface
         );
     }
 
-    protected function dataDirQuestion(ConsoleStyle $io): void
-    {
-        $guessedDir = $this->guesser->guessDataDir();
-        $confirm = false;
-
-        if (null !== $guessedDir) {
-            $confirm = $io->confirm(sprintf('Should we use %s to store docker related files and container data?', $guessedDir));
-        }
-
-        if ($confirm) {
-            $this->dockerDataDir = $guessedDir;
-            return;
-        }
-
-        $this->dockerDataDir = $io->ask(
-            'What directory should we store docker related files and container data in?',
-            sprintf('%s/docker', $this->fileManager->getRootDirectory())
-        );
-    }
-
-    // @todo This method and the one above should be consolidated
-    protected function createDataDir(string $path): void
-    {
-        if (!empty($this->dockerDataDir) && !$this->fileManager->fileExists($this->dockerDataDir)) {
-            $this->fileManager->mkdir($this->dockerDataDir);
-        }
-    }
+//    protected function dataDirQuestion(ConsoleStyle $io): void
+//    {
+//        $guessedDir = $this->guesser->guessDataDir();
+//        $confirm = false;
+//
+//        if (null !== $guessedDir) {
+//            $confirm = $io->confirm(sprintf('Should we use %s to store docker related files and container data?', $guessedDir));
+//        }
+//
+//        if ($confirm) {
+//            $this->dockerDataDir = $guessedDir;
+//            return;
+//        }
+//
+//        $this->dockerDataDir = $io->ask(
+//            'What directory should we store docker related files and container data in?',
+//            sprintf('%s/docker', $this->fileManager->getRootDirectory())
+//        );
+//    }
+//
+//    // @todo This method and the one above should be consolidated
+//    protected function createDataDir(string $path): void
+//    {
+//        if (!empty($this->dockerDataDir) && !$this->fileManager->fileExists($this->dockerDataDir)) {
+//            $this->fileManager->mkdir($this->dockerDataDir);
+//        }
+//    }
 
     protected function serviceAlreadyDefinedQuestion(ConsoleStyle $io, string $serviceName): void
     {

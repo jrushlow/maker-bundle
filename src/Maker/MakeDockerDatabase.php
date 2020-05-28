@@ -29,12 +29,6 @@ class MakeDockerDatabase extends AbstractDockerMaker
     {
         parent::interact($input, $io, $command);
 
-        $command
-            ->addArgument('service-name')
-            ->addArgument('database')
-            ->addArgument('version')
-        ;
-
         $io->newLine();
 
         $databaseChoice = $io->choice(
@@ -46,21 +40,21 @@ class MakeDockerDatabase extends AbstractDockerMaker
 
         $database = strtolower($databaseChoice);
 
-        $input->setArgument('service-name', $database);
-        $input->setArgument('version', $io->ask('What version would you like to use?', 'latest'));
+        $this->arguments->setArgumentValue('service-name', $database);
+        $this->arguments->setArgumentValue('version', $io->ask('What version would you like to use?', 'latest'));
 
 
         if ($this->composeFileManipulator->serviceExists($database)) {
             $this->serviceAlreadyDefinedQuestion($io, $databaseChoice);
 
-            $input->setArgument('service-name', $io->ask(sprintf(
+            $this->arguments->setArgumentValue('service-name', $io->ask(sprintf(
                 'What name should we call the new %s service? e.g. %s',
                 $databaseChoice,
                 str_replace(' ', '-', Str::getRandomTerm())
             )));
         }
 
-        $input->setArgument('database', $database);
+        $this->arguments->setArgumentValue('database', $database);
 
         $io->section(sprintf('- %s -', $databaseChoice));
 
@@ -75,12 +69,12 @@ class MakeDockerDatabase extends AbstractDockerMaker
     {
         parent::generate($input, $io, $generator);
 
-        $service = DatabaseServices::getDatabase($input->getArgument('database'), $input->getArgument('version'));
+        $service = DatabaseServices::getDatabase($this->arguments->getArgumentValue('database'), $this->arguments->getArgumentValue('version'));
 
-        $this->composeFileManipulator->addDockerService($input->getArgument('service-name'), $service);
+        $this->composeFileManipulator->addDockerService($this->arguments->getArgumentValue('service-name'), $service);
 
         //@TODO dump and write could be abstracted
-        $generator->dumpFile($this->dockerComposeFile, Yaml::dump($this->composeFileManipulator->getData(), 20));
+        $generator->dumpFile($this->arguments->getArgumentValue('compose-file'), Yaml::dump($this->composeFileManipulator->getData(), 20));
         $generator->writeChanges();
     }
 }
