@@ -10,7 +10,7 @@ class DatabaseServices
             case 'mariadb':
                 return [
                     'image' => sprintf('mariadb:%s', $version),
-                    'ports' => ['3306']
+                    'ports' => ['3306:3306']
                 ];
         }
     }
