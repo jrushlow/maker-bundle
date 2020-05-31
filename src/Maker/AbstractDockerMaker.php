@@ -33,7 +33,7 @@ abstract class AbstractDockerMaker implements MakerInterface
 //        $this->guesser = new DataDirGuesser($fileManager);
         $this->arguments = new ArgumentCollection();
 
-        $arguments = ['existing-setup', 'compose-file', 'data-dir', 'service-name', 'database-name', 'version'];
+        $arguments = ['existing-setup', 'compose-file', 'data-dir', 'service-name', 'version'];
 
         foreach ($arguments as $argument) {
             $this->arguments->addArgument(new MakerArgument($argument));
