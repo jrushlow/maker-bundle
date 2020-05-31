@@ -2,7 +2,7 @@
 
 namespace Symfony\Bundle\MakerBundle;
 
-class ArgumentCollection implements \ArrayAccess, \IteratorAggregate
+class ArgumentCollection implements \IteratorAggregate
 {
     private $arguments = [];
 
@@ -34,31 +34,5 @@ class ArgumentCollection implements \ArrayAccess, \IteratorAggregate
     public function getIterator()
     {
         return new \ArrayIterator($this->arguments);
-    }
-
-    public function offsetExists($offset): bool
-    {
-        return isset($this->arguments[$offset]);
-    }
-
-    public function offsetGet($offset)
-    {
-        return $this->arguments[$offset];
-    }
-
-    public function offsetSet($offset, $value)
-    {
-        if (null === $offset) {
-            $this->arguments[] = $value;
-
-            return;
-        }
-
-        $this->arguments[$offset] = $value;
-    }
-
-    public function offsetUnset($offset)
-    {
-        unset($this->arguments[$offset]);
     }
 }
