@@ -31,35 +31,40 @@ class MakeDockerDatabase extends AbstractDockerMaker
 
         $io->newLine();
 
-        $databaseChoice = $io->choice(
+        $this->arguments->createArgument(
+            'database-choice',
+            $io->choice(
             'Which database service will you be creating?',
             ['MySQL', 'MariaDB', 'Postgres']
-        );
+        ));
 
-        $io->text([sprintf('For a list of supported versions, check out https://hub.docker.com/_/%s', strtolower($databaseChoice))]);
+        $this->arguments->createArgument('database', strtolower($this->getValue('database-choice')));
 
-        $database = strtolower($databaseChoice);
+        $io->text([sprintf(
+            'For a list of supported versions, check out https://hub.docker.com/_/%s',
+            $this->getValue('database-choice')
+        )]);
 
-        $this->arguments->setArgumentValue('service-name', $database);
+        $this->arguments->setArgumentValue('service-name', $this->getValue('database'));
         $this->arguments->setArgumentValue('version', $io->ask('What version would you like to use?', 'latest'));
 
 
-        if ($this->composeFileManipulator->serviceExists($database)) {
-            $this->serviceAlreadyDefinedQuestion($io, $databaseChoice);
+        if ($this->composeFileManipulator->serviceExists($this->getValue('service-name'))) {
+            $this->serviceAlreadyDefinedQuestion($io, $this->getValue('database-choice'));
 
             $this->arguments->setArgumentValue('service-name', $io->ask(sprintf(
                 'What name should we call the new %s service? e.g. %s',
-                $databaseChoice,
+                $this->getValue('database-choice'),
                 str_replace(' ', '-', Str::getRandomTerm())
             )));
         }
 
-        $this->arguments->setArgumentValue('database', $database);
+        $this->arguments->setArgumentValue('database', $this->getValue('database'));
 
-        $io->section(sprintf('- %s -', $databaseChoice));
+        $io->section(sprintf('- %s -', $this->getValue('database-choice')));
 
         $defaults = [
-            sprintf('Port(s) %s are exposed to the host.', ...(DatabaseServices::getDefaultPorts($database))),
+            sprintf('Port(s) %s are exposed to the host.', ...(DatabaseServices::getDefaultPorts($this->getValue('database')))),
         ];
 
         $io->text($defaults);
@@ -69,12 +74,12 @@ class MakeDockerDatabase extends AbstractDockerMaker
     {
         parent::generate($input, $io, $generator);
 
-        $service = DatabaseServices::getDatabase($this->arguments->getArgumentValue('database'), $this->arguments->getArgumentValue('version'));
+        $service = DatabaseServices::getDatabase($this->getValue('database'), $this->getValue('version'));
 
-        $this->composeFileManipulator->addDockerService($this->arguments->getArgumentValue('service-name'), $service);
+        $this->composeFileManipulator->addDockerService($this->getValue('service-name'), $service);
 
         //@TODO dump and write could be abstracted
-        $generator->dumpFile($this->arguments->getArgumentValue('compose-file'), Yaml::dump($this->composeFileManipulator->getData(), 20));
+        $generator->dumpFile($this->getValue('compose-file'), Yaml::dump($this->composeFileManipulator->getData(), 20));
         $generator->writeChanges();
     }
 }

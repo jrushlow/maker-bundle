@@ -110,6 +110,11 @@ abstract class AbstractDockerMaker implements MakerInterface
         }
     }
 
+    protected function getValue(string $argumentName)
+    {
+        return $this->arguments->getArgumentValue($argumentName);
+    }
+
     protected function writeSuccessMessage(ConsoleStyle $io): void
     {
         $io->newLine();

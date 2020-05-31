@@ -6,8 +6,19 @@ class ArgumentCollection implements \IteratorAggregate
 {
     private $arguments = [];
 
+    public function createArgument(string $name, string $value, bool $required = true): MakerArgument
+    {
+        $this->addArgument($argument = new MakerArgument($name, $value, $required));
+
+        return $argument;
+    }
+
     public function addArgument(MakerArgument $argument): void
     {
+        if (isset($this->arguments[$argument->getName()])) {
+            // throw new ex "Argument already exists - use ArgumentCollection->replaceArgument()"
+        }
+
         $this->arguments[$argument->getName()] = $argument;
     }
 
