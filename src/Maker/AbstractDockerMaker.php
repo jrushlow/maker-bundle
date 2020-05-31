@@ -6,7 +6,6 @@ use Symfony\Bundle\MakerBundle\ArgumentCollection;
 use Symfony\Bundle\MakerBundle\ConsoleStyle;
 use Symfony\Bundle\MakerBundle\DependencyBuilder;
 use Symfony\Bundle\MakerBundle\Docker\ComposeFileManipulator;
-use Symfony\Bundle\MakerBundle\Docker\DataDirGuesser;
 use Symfony\Bundle\MakerBundle\FileManager;
 use Symfony\Bundle\MakerBundle\Generator;
 use Symfony\Bundle\MakerBundle\MakerArgument;
@@ -15,6 +14,11 @@ use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Yaml\Yaml;
 
+/**
+ * Convenient abstract class for docker makers.
+ *
+ * @author  Jesse Rushlow <jr@rushlow.dev>
+ */
 abstract class AbstractDockerMaker implements MakerInterface
 {
     /** @var ComposeFileManipulator */
@@ -26,8 +30,6 @@ abstract class AbstractDockerMaker implements MakerInterface
     public function __construct(FileManager $fileManager)
     {
         $this->fileManager = $fileManager;
-
-//        //$TODO refactor the guesser, naming conventions, etc..
 //        $this->guesser = new DataDirGuesser($fileManager);
         $this->arguments = new ArgumentCollection();
 
@@ -55,9 +57,6 @@ abstract class AbstractDockerMaker implements MakerInterface
         }
 
         $this->composeFileManipulator = new ComposeFileManipulator($composeFileContents);
-
-        // @todo duh! change this up to created or save the created for later
-        $io->text('The docker-compose file is located in your project root directory.');
     }
 
     public function generate(InputInterface $input, ConsoleStyle $io, Generator $generator): void
@@ -92,7 +91,6 @@ abstract class AbstractDockerMaker implements MakerInterface
 //        );
 //    }
 //
-//    // @todo This method and the one above should be consolidated
 //    protected function createDataDir(string $path): void
 //    {
 //        if (!empty($this->dockerDataDir) && !$this->fileManager->fileExists($this->dockerDataDir)) {
