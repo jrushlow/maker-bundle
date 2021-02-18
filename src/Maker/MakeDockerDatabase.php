@@ -83,10 +83,18 @@ final class MakeDockerDatabase extends AbstractMaker
         $composeFileContents = '';
         $statusMessage = 'Existing docker-compose.yaml not found: a new one will be generated!';
 
-        if ($this->fileManager->fileExists($this->composeFilePath)) {
+        if ($fileFound = $this->fileManager->fileExists($this->composeFilePath)) {
             $composeFileContents = $this->fileManager->getFileContents($this->composeFilePath);
 
             $statusMessage = 'We found your existing docker-compose.yaml: Let\'s update it!';
+        }
+
+        if (!$fileFound) {
+            $this->composeFilePath = sprintf('%s/docker-compose.yml', $this->fileManager->getRootDirectory());
+
+            $composeFileContents = $this->fileManager->getFileContents($this->composeFilePath);
+
+            $statusMessage = 'We found your existing docker-compose.yml: Let\'s update it!';
         }
 
         $io->text($statusMessage);
