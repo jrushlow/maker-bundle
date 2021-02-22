@@ -9,10 +9,18 @@ use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Style\SymfonyStyle;
 
+<?php if ($use_attributes): ?>
+#[ConsoleCommand(
+    name: '<?= $command_name; ?>',
+    description: 'Add a short description for your command',
+)]
+<?php endif; ?>
 class <?= $class_name; ?> extends Command
 {
+<?php if (!$use_attributes): ?>
     protected static $defaultName = '<?= $command_name; ?>';
     protected static $defaultDescription = 'Add a short description for your command';
+<?php endif; ?>
 
     protected function configure()
     {
